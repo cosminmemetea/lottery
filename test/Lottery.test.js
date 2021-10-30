@@ -23,9 +23,27 @@ describe('Lottery Tests', ()=>{
         });
 
         const players = await lottery.methods.getPlayers().call({
-            from: accounts[0],
+            from: accounts[0]
         });
 
+        assert.equal(1, players.length);
         assert.equal(players[0], accounts[0]);
+
+    });
+
+    it('Allows multiple accounts to enter', async () => {
+
+    });
+
+    it('Pick a winner', async () => {
+
+    });
+
+    it('Forbidden non-admin access to picking a winner', async () =>{
+
+    });
+
+    it('Not enought money to enter in the game', async () => {
+
     });
 });
