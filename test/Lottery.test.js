@@ -23,6 +23,14 @@ const pickWinner = async (accountIndex) => {
     });
 }
 
+const expectException = async (promise) => {
+    try{
+        await promise;
+        assert(false);
+    }catch(error){
+        assert.ok(error);
+    }
+}
 
 beforeEach(async() => {
     accounts = await web3.eth.getAccounts();
@@ -77,20 +85,10 @@ describe('Lottery Tests', ()=>{
     });
 
     it('Forbidden non-admin access to picking a winner', async () =>{
-        try{
-            await pickWinner(1);
-            assert(false);
-        }catch(error){
-            assert.ok(error);
-        }
+        expectException(pickWinner(1));
     });
 
     it('Not enought money to enter in the lottery game', async () => {
-        try{
-            await enterNewAccount(1, '0.00');
-            assert(false);
-        }catch(error){
-            assert.ok(error);
-        }
+       expectException(enterNewAccount(1, '0.00'));
     });
 });
