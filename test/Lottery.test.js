@@ -6,31 +6,6 @@ const { abi, evm } = require('../compile');
 let accounts;
 let lottery;
 
-const enterNewAccount = async (accountIndex, etherQuantity) => {
-    await lottery.methods.enter().send({
-        from: accounts[accountIndex],
-        value: web3.utils.toWei(etherQuantity, 'ether')
-    });
-}
-const getPlayers = async (accountIndex) => {
-    return  await lottery.methods.getPlayers().call({
-        from: accounts[accountIndex]
-    });
-}
-const pickWinner = async (accountIndex) => {
-    await lottery.methods.pickWinner().call({
-        from: accounts[accountIndex]
-    });
-}
-
-const expectException = async (promise) => {
-    try{
-        await promise;
-        assert(false);
-    }catch(error){
-        assert.ok(error);
-    }
-}
 
 beforeEach(async() => {
     accounts = await web3.eth.getAccounts();
@@ -68,9 +43,9 @@ describe('Lottery Tests', ()=>{
 
     it('Pick a winner', async () => {
         await enterNewAccount(1, '3');
-        const startingBalance = await web3.eth.getBalance(accounts[1]);
+        const startingBalance = await getBalance(1);
         await pickWinner(0);
-        const finalBalance = await web3.eth.getBalance(accounts[1]);
+        const finalBalance = await getBalance(1);
         const diff = finalBalance - startingBalance;
         // why 2.8 here? it's 3 - the_amount_of_money_spend_on_gas
         // can we find the amount of money spend on the gas? 
@@ -78,17 +53,52 @@ describe('Lottery Tests', ()=>{
         // spend for each code machine instructions like ADD, PUSH etc.
         assert(diff < web3.utils.toWei('2.8', 'ether'));
 
-        // This assertion fails but in the remix editor seems that after the #pickWinner() method
-        // is called there is no player left in the players list.
+        // This assertion fails but in the IN REMIX EDITOR (https://remix.ethereum.org/) seems that after
+        // the #pickWinner() method is called there is no player left in the players list.
+        //
         // const players = await getPlayers(0);
         // assert.equal(players.length, 0, 'No player must be in the lottery after the winner is picked.');
     });
 
-    it('Forbidden non-admin access to picking a winner', async () =>{
+    it('Forbidden non-admin access to picking a winner', () => {
         expectException(pickWinner(1));
     });
 
-    it('Not enought money to enter in the lottery game', async () => {
+    it('Not enought money to enter in the lottery game', () => {
        expectException(enterNewAccount(1, '0.00'));
     });
 });
+
+const enterNewAccount = async (accountIndex, etherQuantity) => {
+    await lottery.methods.enter().send({
+        from: accounts[accountIndex],
+        value: web3.utils.toWei(etherQuantity, 'ether')
+    });
+}
+
+const getBalance = async (accountIndex) => {
+    return await web3.eth.getBalance(accounts[accountIndex]);
+} 
+
+const getPlayers = async (accountIndex) => {
+    return await lottery.methods.getPlayers().call({
+        from: accounts[accountIndex]
+    });
+}
+
+const pickWinner = async (accountIndex) => {
+    await lottery.methods.pickWinner().call({
+        from: accounts[accountIndex]
+    });
+}
+
+const expectException = async (promise) => {
+    try{
+        await promise;
+        assert(false);
+    }catch(error){
+        //PLEASE DO AVOID THIS KIND OF ASSERTIONS IN PRODUCTION !!! IT'S REALLY A WEAK ONE;
+        //BACKED UP HERE BY MANUAL TESTING REALISED IN REMIX EDITOR (https://remix.ethereum.org/).
+        assert.ok(error);
+    }
+}
